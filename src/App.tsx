@@ -10,7 +10,18 @@ import { GoogleGenAI } from "@google/genai";
 import { Mode, MealType, FullChefOutput, ChefResponse } from './types';
 import { ALIMENTOS } from './constants';
 
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+let aiInstance: GoogleGenAI | null = null;
+
+const getAI = () => {
+  if (!aiInstance) {
+    const apiKey = process.env.GEMINI_API_KEY || (import.meta as any).env?.VITE_GEMINI_API_KEY;
+    if (!apiKey) {
+      throw new Error("GEMINI_API_KEY no detectado. Asegúrate de añadir VITE_GEMINI_API_KEY en las variables de entorno.");
+    }
+    aiInstance = new GoogleGenAI({ apiKey });
+  }
+  return aiInstance;
+};
 
 export default function App() {
   const [ingredientes, setIngredientes] = useState('');
@@ -40,6 +51,7 @@ export default function App() {
     setLoading(true);
     setError(null);
     try {
+      const ai = getAI();
       const prompt = `
 ROL
 Actúa como chef profesional experto en cocina tradicional y antigua de cualquier parte del mundo. Dominas recetas auténticas, historia gastronómica y técnicas clásicas. Prohibido usar técnicas modernas o reinterpretaciones.
